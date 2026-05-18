@@ -485,7 +485,7 @@ function useJobImg(keyword){
       .then(r=>r.json()).then(d=>{
         if(!dead&&d.photos&&d.photos.length){
           const u=d.photos[Math.floor(Math.random()*Math.min(d.photos.length,3))].src.medium;
-          imgCache[keyword]=u;setSrRc(u);
+          imgCache[keyword]=u;setSrc(u);
         }
       }).catch(()=>{}).finally(()=>{if(!dead)setLoading(false);});
     return()=>{dead=true;};
