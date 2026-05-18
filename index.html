@@ -483,11 +483,13 @@ function useJobImg(keyword){
     fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=3&orientation=square`,
       {headers:{Authorization:PEXELS_KEY}})
       .then(r=>r.json()).then(d=>{
+        console.log("API응답:", d);
+        console.log("keyword:", keyword);
         if(!dead&&d.photos&&d.photos.length){
           const u=d.photos[Math.floor(Math.random()*Math.min(d.photos.length,3))].src.medium;
           imgCache[keyword]=u;setSrc(u);
         }
-      }).catch(()=>{}).finally(()=>{if(!dead)setLoading(false);});
+      })..catch(console.error).finally(()=>{if(!dead)setLoading(false);});
     return()=>{dead=true;};
   },[keyword]);
   return {src,loading};
