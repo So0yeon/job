@@ -489,7 +489,7 @@ function useJobImg(keyword){
           const u=d.photos[Math.floor(Math.random()*Math.min(d.photos.length,3))].src.medium;
           imgCache[keyword]=u;setSrc(u);
         }
-      })..catch(console.error).finally(()=>{if(!dead)setLoading(false);});
+      })..catc(()=>{}).finally(()=>{if(!dead)setLoading(false);});
     return()=>{dead=true;};
   },[keyword]);
   return {src,loading};
