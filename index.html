@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>✨ 직업 월드컵</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Nanum Gothic',sans-serif;min-height:100vh;overflow-x:hidden;transition:background 1.2s ease}
+#root{min-height:100vh}
+.jua{font-family:'Jua',sans-serif}
+
+body.theme-lobby {background:linear-gradient(135deg,#fff9f0 0%,#fff0fa 50%,#f0f4ff 100%)}
+body.theme-t64   {background:linear-gradient(135deg,#e8f5e9 0%,#f1f8e9 50%,#e0f7fa 100%)}
+body.theme-t32   {background:linear-gradient(135deg,#e3f2fd 0%,#e8eaf6 50%,#f3e5f5 100%)}
+body.theme-t16   {background:linear-gradient(135deg,#fff3e0 0%,#fce4ec 50%,#f3e5f5 100%)}
+body.theme-t8    {background:linear-gradient(135deg,#fce4ec 0%,#f3e5f5 50%,#ede7f6 100%)}
+body.theme-t4    {background:linear-gradient(135deg,#ede7f6 0%,#e8eaf6 50%,#e3f2fd 100%)}
+body.theme-final {background:linear-gradient(135deg,#1a0533 0%,#0d1b4a 50%,#0a2a1a 100%)}
+body.theme-result{background:linear-gradient(135deg,#fff9f0 0%,#fff0fa 50%,#f0f4ff 100%)}
+
+.bg-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+.bg-blob{position:absolute;border-radius:50%;opacity:.18;transition:all 1.2s ease}
+
+/* 라운드 전환 오버레이 */
+@keyframes transitionFade{0%{opacity:1}80%{opacity:1}100%{opacity:0;pointer-events:none}}
+@keyframes roundIn{0%{opacity:0;transform:scale(.4) rotate(-12deg)}55%{transform:scale(1.18) rotate(2deg)}100%{opacity:1;transform:scale(1) rotate(0deg)}}
+
+/* 닉네임 화면 */
+.screen-nick{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;position:relative;z-index:1}
+.nick-card{background:white;border-radius:32px;padding:2.8rem 2.5rem;max-width:460px;width:100%;box-shadow:0 20px 60px rgba(255,130,100,.15),0 4px 16px rgba(0,0,0,.06);text-align:center;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+.title-badge{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#ff6b6b,#ff8e53);color:white;padding:.5rem 1.4rem;border-radius:99px;font-size:.9rem;margin-bottom:1.2rem;font-weight:700}
+.main-title{font-size:2.8rem;line-height:1.15;margin-bottom:.5rem;background:linear-gradient(135deg,#ff6b6b 0%,#c471ed 50%,#12c2e9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.sub-title{color:#888;font-size:.95rem;margin-bottom:1.8rem}
+.nick-input{width:100%;padding:1rem 1.4rem;border:2.5px solid #f0e0ff;border-radius:16px;font-size:1.2rem;font-family:'Jua',sans-serif;outline:none;transition:all .2s;background:#fafafa;text-align:center}
+.nick-input:focus{border-color:#c471ed;background:white;box-shadow:0 0 0 4px rgba(196,113,237,.15)}
+.nick-input::placeholder{color:#ccc}
+.round-select{display:flex;gap:.5rem;justify-content:center;margin:1rem 0 1.4rem;flex-wrap:wrap}
+.round-btn{padding:.55rem 1.1rem;border-radius:99px;border:2.5px solid #e8e0ff;background:white;font-family:'Jua',sans-serif;font-size:.88rem;cursor:pointer;transition:all .2s;color:#888}
+.round-btn.active{background:linear-gradient(135deg,#c471ed,#12c2e9);color:white;border-color:transparent;transform:scale(1.06)}
+.start-btn{width:100%;padding:1.1rem;border-radius:20px;border:none;background:linear-gradient(135deg,#ff6b6b 0%,#ff8e53 100%);color:white;font-family:'Jua',sans-serif;font-size:1.4rem;cursor:pointer;transition:all .25s;box-shadow:0 8px 24px rgba(255,107,107,.35)}
+.start-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 12px 32px rgba(255,107,107,.45)}
+.start-btn:active{transform:scale(.97)}
+.start-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+/* 게임 화면 */
+.screen-game{min-height:100vh;display:flex;flex-direction:column;padding:1rem 1.2rem;position:relative;z-index:1}
+.game-header{margin-bottom:.8rem;position:relative;z-index:1}
+.progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+.round-badge{padding:.38rem 1.1rem;border-radius:99px;font-size:.85rem;font-weight:700;color:white;transition:all .8s ease}
+.progress-bar-bg{height:10px;border-radius:99px;overflow:hidden;transition:background .8s ease}
+.progress-bar-fill{height:100%;border-radius:99px;transition:width .5s ease,background .8s ease}
+
+.vs-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.75rem;position:relative;z-index:1}
+.cards-row{display:flex;gap:.9rem;align-items:stretch;width:100%;max-width:640px}
+
+/* 직업 카드 */
+.job-card{flex:1;background:white;border-radius:24px;overflow:hidden;cursor:pointer;box-shadow:0 8px 28px rgba(0,0,0,.08);transition:all .25s cubic-bezier(.34,1.56,.64,1);border:3px solid transparent;display:flex;flex-direction:column}
+.job-card:hover{transform:translateY(-8px) scale(1.04);box-shadow:0 20px 50px rgba(0,0,0,.16);border-color:#c471ed}
+.job-card:active{transform:scale(.96)}
+.job-card.chosen{animation:cardWin .45s ease forwards}
+.job-card.unchosen{animation:cardLose .45s ease forwards}
+.job-card.dark-card{background:rgba(255,255,255,.08);border:2px solid rgba(255,255,255,.18);backdrop-filter:blur(8px)}
+.job-card.dark-card:hover{border-color:#ffd700;box-shadow:0 20px 60px rgba(255,215,0,.28)}
+
+.card-img-wrap{width:100%;aspect-ratio:4/3;position:relative;overflow:hidden;background:linear-gradient(135deg,#f8f0ff,#f0f4ff);flex-shrink:0}
+.card-img{width:100%;height:100%;object-fit:cover;transition:transform .35s}
+.job-card:hover .card-img{transform:scale(1.1)}
+.card-skeleton{position:absolute;inset:0;background:linear-gradient(90deg,#f0e8ff 25%,#e8d8ff 50%,#f0e8ff 75%);background-size:200%;animation:shimmer 1.5s infinite}
+.card-emoji-fb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:3.2rem}
+
+.card-body{padding:.75rem .7rem .9rem;text-align:center;flex:1;display:flex;flex-direction:column;gap:.25rem}
+.job-name{font-size:1.05rem;color:#222;font-weight:800;line-height:1.2}
+.job-name.dk{color:white}
+.job-work{font-size:.7rem;color:#888;line-height:1.55;flex:1}
+.job-work.dk{color:rgba(255,255,255,.68)}
+.job-person{font-size:.67rem;color:#a020c0;font-weight:700}
+.job-person.dk{color:#ffd700}
+.pick-hint{font-size:.67rem;color:#ddd}
+.pick-hint.dk{color:rgba(255,255,255,.35)}
+
+.vs-badge{width:50px;height:50px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:1.1rem;font-weight:900;font-family:'Jua',sans-serif;flex-shrink:0;animation:pulse 2s infinite}
+
+.comment-box{border-radius:16px;padding:.6rem 1.2rem;font-size:.86rem;box-shadow:0 4px 16px rgba(0,0,0,.06);max-width:460px;text-align:center;animation:slideUp .4s ease}
+.comment-box.lt{background:white;color:#555}
+.comment-box.dk{background:rgba(255,255,255,.1);color:rgba(255,255,255,.85);backdrop-filter:blur(8px)}
+
+/* 결과 화면 */
+.screen-result{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;position:relative;z-index:1;text-align:center}
+.result-card{background:white;border-radius:36px;padding:2.5rem 2rem;max-width:500px;width:100%;box-shadow:0 24px 80px rgba(196,113,237,.2);animation:popIn .7s cubic-bezier(.34,1.56,.64,1);position:relative;z-index:1}
+.winner-crown{font-size:3.2rem;animation:bounce 1s ease infinite alternate;display:block;margin-bottom:.4rem}
+.result-title{font-size:1rem;color:#aaa;margin-bottom:.3rem}
+.nick-hl{color:#c471ed;font-size:1.15rem}
+.winner-img-wrap{width:180px;height:180px;margin:.9rem auto;border-radius:24px;overflow:hidden;box-shadow:0 12px 40px rgba(196,113,237,.25);background:linear-gradient(135deg,#f8f0ff,#f0f4ff);position:relative}
+.winner-img{width:100%;height:100%;object-fit:cover}
+.winner-emoji-big{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:5rem}
+.winner-name{font-size:2rem;background:linear-gradient(135deg,#ff6b6b,#c471ed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:.4rem 0}
+.winner-desc{color:#666;font-size:.88rem;margin-bottom:.6rem;line-height:1.65}
+.winner-person-box{display:inline-flex;align-items:center;gap:.5rem;background:#fff0fb;border:1.5px solid #f0d0ff;border-radius:12px;padding:.42rem .9rem;font-size:.8rem;color:#a020c0;font-weight:700;margin-bottom:1rem}
+.info-section{margin-bottom:1rem;text-align:left}
+.info-label{font-size:.74rem;color:#bbb;font-weight:700;letter-spacing:.06em;margin-bottom:.45rem;text-transform:uppercase}
+.tag-row{display:flex;flex-wrap:wrap;gap:.4rem}
+.tag{padding:.35rem .82rem;border-radius:99px;font-size:.78rem;font-weight:700}
+.tag-skill{background:#f0e8ff;color:#9c4dd8}
+.tag-subject{background:#e8f4ff;color:#3b82f6}
+.tag-trait{background:#fff0e8;color:#ea580c}
+.link-section{margin-top:1rem}
+.link-btn{display:flex;align-items:center;gap:.6rem;padding:.75rem 1rem;border-radius:14px;background:#f8f4ff;border:1.5px solid #e8d8ff;text-decoration:none;color:#7c3aed;font-size:.84rem;font-weight:700;transition:all .2s;margin-bottom:.5rem}
+.link-btn:hover{background:#f0e4ff;transform:translateX(4px)}
+.link-icon{font-size:1.1rem;flex-shrink:0}
+.retry-btn{width:100%;margin-top:1.3rem;padding:.95rem;border-radius:20px;border:none;background:linear-gradient(135deg,#c471ed,#12c2e9);color:white;font-family:'Jua',sans-serif;font-size:1.3rem;cursor:pointer;transition:all .25s;box-shadow:0 8px 24px rgba(196,113,237,.35)}
+.retry-btn:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(196,113,237,.45)}
+
+/* 애니메이션 */
+@keyframes popIn{from{opacity:0;transform:scale(.72)}to{opacity:1;transform:scale(1)}}
+@keyframes slideUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:translateY(0)}}
+@keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.12)}}
+@keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+@keyframes cardWin{0%{transform:scale(1)}40%{transform:scale(1.09)}100%{transform:scale(1)}}
+@keyframes cardLose{0%{opacity:1}100%{opacity:.22;transform:scale(.88) rotate(-4deg)}}
+
+@media(max-width:480px){
+  .main-title{font-size:2.2rem}
+  .job-name{font-size:.92rem}
+  .cards-row{gap:.6rem}
+  .winner-name{font-size:1.75rem}
+  .card-img-wrap{aspect-ratio:1}
+  .job-work{font-size:.65rem}
+}
+</style>
+</head>
+<body class="theme-lobby">
+<div id="root"></div>
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ══════ 64개 직업 데이터 ══════
+const ALL_JOBS = [
+  {id:1,  name:"요리사",       emoji:"👨‍🍳", keyword:"chef cooking kitchen professional",
+   work:"레시피를 개발하고 맛있는 요리를 만들어요. 식재료 선별부터 플레이팅까지 모두 담당해요!",
+   person:"백종원, 고든 램지",
+   skills:["창의력","손재주","인내심"], subjects:["가정","과학"], traits:["꼼꼼한 사람","요리를 좋아하는 사람"]},
+  {id:2,  name:"수의사",       emoji:"🐾", keyword:"veterinarian animal hospital treatment",
+   work:"아픈 동물을 진찰하고 치료해요. 수술과 예방접종으로 동물의 건강을 지켜줘요!",
+   person:"제인 구달",
+   skills:["배려심","집중력","책임감"], subjects:["과학","생물"], traits:["동물을 좋아하는 사람","침착한 사람"]},
+  {id:3,  name:"게임개발자",   emoji:"🎮", keyword:"game developer coding computer programming",
+   work:"게임을 기획하고 코딩으로 직접 만들어요. 캐릭터, 스토리, 규칙을 모두 설계해요!",
+   person:"미야모토 시게루",
+   skills:["논리력","창의력","집중력"], subjects:["수학","정보"], traits:["게임을 좋아하는 사람","끈기 있는 사람"]},
+  {id:4,  name:"교사",         emoji:"📚", keyword:"teacher classroom school children",
+   work:"학생들에게 지식을 가르치고 꿈을 키워줘요. 수업을 준비하고 학생들과 함께 성장해요!",
+   person:null,
+   skills:["발표력","인내심","리더십"], subjects:["전과목","교육학"], traits:["설명을 잘하는 사람","친절한 사람"]},
+  {id:5,  name:"웹툰작가",     emoji:"🎨", keyword:"webtoon comic artist drawing illustration",
+   work:"이야기를 구성하고 캐릭터를 그려 웹툰을 연재해요. 상상을 그림으로 표현해요!",
+   person:"윤태호(미생), 주호민",
+   skills:["창의력","그림실력","이야기력"], subjects:["미술","국어"], traits:["그림 그리기 좋아하는 사람","상상력 풍부한 사람"]},
+  {id:6,  name:"경찰관",       emoji:"👮", keyword:"police officer uniform patrol",
+   work:"범죄를 예방하고 사람들의 안전을 지켜요. 순찰, 수사, 교통 정리 등 다양한 일을 해요!",
+   person:null,
+   skills:["체력","용기","판단력"], subjects:["사회","체육"], traits:["정의감 있는 사람","체력이 좋은 사람"]},
+  {id:7,  name:"우주비행사",   emoji:"🚀", keyword:"astronaut space suit nasa mission",
+   work:"로켓을 타고 우주에서 과학 실험을 하고 미지의 세계를 탐험해요!",
+   person:"닐 암스트롱, 이소연",
+   skills:["체력","과학지식","집중력"], subjects:["과학","수학","체육"], traits:["도전을 좋아하는 사람","과학을 좋아하는 사람"]},
+  {id:8,  name:"의사",         emoji:"👨‍⚕️", keyword:"doctor hospital stethoscope white coat",
+   work:"환자를 진찰하고 병을 진단해 치료해요. 수술도 하고 처방전도 써서 건강을 되찾아줘요!",
+   person:"이국종",
+   skills:["집중력","책임감","공감능력"], subjects:["과학","생물","수학"], traits:["꼼꼼한 사람","봉사 정신이 있는 사람"]},
+  {id:9,  name:"음악가",       emoji:"🎵", keyword:"musician piano guitar concert performance",
+   work:"악기를 연주하고 노래를 만들어요. 작곡, 편곡, 공연으로 감동을 전달해요!",
+   person:"베토벤, BTS",
+   skills:["음감","창의력","인내심"], subjects:["음악","예술"], traits:["음악을 좋아하는 사람","감수성이 풍부한 사람"]},
+  {id:10, name:"운동선수",     emoji:"⚽", keyword:"athlete sports training competition",
+   work:"매일 훈련하며 실력을 키우고 경기에서 최선을 다해요. 팀을 위해 함께 싸워요!",
+   person:"손흥민, 김연아",
+   skills:["체력","집중력","끈기"], subjects:["체육","과학"], traits:["운동을 좋아하는 사람","승부욕이 있는 사람"]},
+  {id:11, name:"건축가",       emoji:"🏗️", keyword:"architect blueprint building design",
+   work:"건물을 설계하고 도면을 그려요. 안전하고 아름다운 공간을 만들어 사람들의 삶을 바꿔요!",
+   person:"안도 다다오, 자하 하디드",
+   skills:["창의력","수학","공간감각"], subjects:["수학","미술","과학"], traits:["꼼꼼한 사람","창의력 있는 사람"]},
+  {id:12, name:"소방관",       emoji:"🚒", keyword:"firefighter fire rescue hero uniform",
+   work:"화재 현장에서 불을 끄고 위험에 처한 사람들을 구해요. 재난 구조 훈련도 해요!",
+   person:null,
+   skills:["체력","용기","팀워크"], subjects:["체육","과학"], traits:["용감한 사람","협동심 있는 사람"]},
+  {id:13, name:"유튜버",       emoji:"📹", keyword:"youtuber studio camera creator content",
+   work:"영상을 기획하고 촬영·편집해서 유튜브에 업로드해요. 구독자와 소통하며 콘텐츠를 만들어요!",
+   person:"쯔양, MrBeast",
+   skills:["창의력","발표력","편집력"], subjects:["국어","미술","정보"], traits:["끼 있는 사람","기획력 있는 사람"]},
+  {id:14, name:"과학자",       emoji:"🔬", keyword:"scientist laboratory research microscope",
+   work:"가설을 세우고 실험해서 새로운 사실을 발견해요. 논문을 써 인류의 지식을 넓혀요!",
+   person:"마리 퀴리, 아인슈타인",
+   skills:["호기심","집중력","분석력"], subjects:["과학","수학"], traits:["탐구를 좋아하는 사람","끈기 있는 사람"]},
+  {id:15, name:"디자이너",     emoji:"✏️", keyword:"graphic designer creative studio laptop",
+   work:"로고, 포스터, 앱 화면 등을 디자인해요. 색상과 형태로 메시지를 전달해요!",
+   person:null,
+   skills:["창의력","심미안","집중력"], subjects:["미술","정보"], traits:["감각 있는 사람","꼼꼼한 사람"]},
+  {id:16, name:"환경운동가",   emoji:"🌱", keyword:"environment nature conservation activist",
+   work:"환경 보호 캠페인을 기획하고 정책을 바꾸기 위해 활동해요. 지구를 지키는 일이에요!",
+   person:"그레타 툰베리",
+   skills:["리더십","설득력","지식"], subjects:["과학","사회"], traits:["자연을 사랑하는 사람","행동력 있는 사람"]},
+  {id:17, name:"패션디자이너", emoji:"👗", keyword:"fashion designer clothing runway",
+   work:"옷을 스케치하고 원단을 골라 직접 만들어요. 트렌드를 이끄는 컬렉션을 선보여요!",
+   person:"코코 샤넬, 지방시",
+   skills:["창의력","심미안","손재주"], subjects:["미술","가정"], traits:["패션을 좋아하는 사람","독창적인 사람"]},
+  {id:18, name:"사진작가",     emoji:"📷", keyword:"photographer camera landscape portrait",
+   work:"순간을 포착해 아름다운 사진을 찍어요. 빛, 구도, 피사체를 조절해 이야기를 담아요!",
+   person:null,
+   skills:["관찰력","창의력","감수성"], subjects:["미술","과학"], traits:["눈썰미 있는 사람","여행을 좋아하는 사람"]},
+  {id:19, name:"번역가",       emoji:"🌐", keyword:"translator language book dictionary",
+   work:"한 언어를 다른 언어로 옮겨요. 책, 영화, 계약서 등 다양한 분야에서 소통을 도와요!",
+   person:null,
+   skills:["언어능력","집중력","문화이해"], subjects:["국어","영어"], traits:["언어에 관심 있는 사람","꼼꼼한 사람"]},
+  {id:20, name:"로봇공학자",   emoji:"🤖", keyword:"robot engineer laboratory technology future",
+   work:"로봇을 설계하고 프로그래밍해요. 사람을 돕는 로봇, 산업용 로봇을 만들어요!",
+   person:"데니스 홍",
+   skills:["논리력","수학","창의력"], subjects:["수학","과학","정보"], traits:["만들기를 좋아하는 사람","논리적인 사람"]},
+  {id:21, name:"작가",         emoji:"📖", keyword:"author writer books desk pen",
+   work:"소설, 시, 에세이 등을 써요. 상상의 세계를 글로 표현해 독자에게 감동을 줘요!",
+   person:"조정래, J.K. 롤링",
+   skills:["상상력","문장력","관찰력"], subjects:["국어","사회"], traits:["글 쓰기를 좋아하는 사람","상상력 풍부한 사람"]},
+  {id:22, name:"파일럿",       emoji:"✈️", keyword:"pilot cockpit airplane sky clouds",
+   work:"비행기를 조종해 승객을 안전하게 목적지까지 데려다줘요. 날씨와 항로를 분석해요!",
+   person:null,
+   skills:["집중력","판단력","체력"], subjects:["수학","과학","영어"], traits:["도전을 좋아하는 사람","침착한 사람"]},
+  {id:23, name:"심리상담사",   emoji:"💬", keyword:"therapist counseling conversation calm",
+   work:"마음이 힘든 사람들의 이야기를 듣고 함께 해결책을 찾아요. 상처를 치유하는 일이에요!",
+   person:null,
+   skills:["공감능력","경청","배려심"], subjects:["사회","국어"], traits:["사람을 잘 이해하는 사람","인내심 있는 사람"]},
+  {id:24, name:"유전공학자",   emoji:"🧬", keyword:"geneticist dna laboratory science biology",
+   work:"DNA를 연구하고 유전자를 분석해요. 질병 치료, 농작물 개량 등 다양하게 활용돼요!",
+   person:null,
+   skills:["분석력","집중력","과학지식"], subjects:["과학","생물","수학"], traits:["연구를 좋아하는 사람","끈기 있는 사람"]},
+  {id:25, name:"제과사",       emoji:"🎂", keyword:"pastry chef bakery dessert cake sweet",
+   work:"케이크, 초콜릿, 마카롱 등 달콤한 디저트를 만들어요. 맛과 비주얼 모두 중요해요!",
+   person:null,
+   skills:["손재주","창의력","인내심"], subjects:["가정","수학"], traits:["꼼꼼한 사람","달콤한 것을 좋아하는 사람"]},
+  {id:26, name:"승무원",       emoji:"💺", keyword:"flight attendant airline service smile",
+   work:"비행 중 승객의 안전을 책임지고 편안한 여행을 도와요. 응급상황 대처도 해요!",
+   person:null,
+   skills:["서비스마인드","외국어","체력"], subjects:["영어","체육"], traits:["사람을 좋아하는 사람","밝은 사람"]},
+  {id:27, name:"기자",         emoji:"📰", keyword:"journalist reporter interview news",
+   work:"현장을 취재하고 기사를 써요. TV, 신문, 인터넷으로 사람들에게 정보를 전달해요!",
+   person:null,
+   skills:["글쓰기","판단력","발표력"], subjects:["국어","사회"], traits:["호기심 많은 사람","발 빠른 사람"]},
+  {id:28, name:"약사",         emoji:"💊", keyword:"pharmacist pharmacy medicine dispensing",
+   work:"처방전에 따라 약을 조제하고 복용 방법을 안내해요. 약의 부작용도 꼼꼼히 체크해요!",
+   person:null,
+   skills:["집중력","꼼꼼함","화학지식"], subjects:["과학","생물","수학"], traits:["꼼꼼한 사람","책임감 있는 사람"]},
+  {id:29, name:"환경공학자",   emoji:"♻️", keyword:"environmental engineer pollution clean water",
+   work:"대기·수질·토양 오염을 분석하고 환경 정화 기술을 개발해요. 지구를 깨끗하게 해요!",
+   person:null,
+   skills:["분석력","과학지식","문제해결"], subjects:["과학","수학"], traits:["환경을 생각하는 사람","논리적인 사람"]},
+  {id:30, name:"마술사",       emoji:"🎩", keyword:"magician magic show performance stage",
+   work:"마술 도구와 기술로 관객을 깜짝 놀라게 해요. 오랜 연습과 퍼포먼스가 핵심이에요!",
+   person:null,
+   skills:["연습","손재주","연기력"], subjects:["체육","예술"], traits:["보여주는 것을 좋아하는 사람","재치 있는 사람"]},
+  {id:31, name:"해양생물학자", emoji:"🐠", keyword:"marine biologist ocean sea diving",
+   work:"바다 생물을 연구하고 생태계를 보호해요. 잠수해서 직접 생물을 관찰하기도 해요!",
+   person:null,
+   skills:["호기심","체력","과학지식"], subjects:["과학","생물"], traits:["바다를 좋아하는 사람","탐구하는 사람"]},
+  {id:32, name:"만화가",       emoji:"🖼️", keyword:"manga cartoon illustrator comic art",
+   work:"스토리와 그림으로 만화를 만들어요. 캐릭터를 디자인하고 세계관을 구축해요!",
+   person:"허영만, 이현세",
+   skills:["그림실력","이야기력","끈기"], subjects:["미술","국어"], traits:["그림을 좋아하는 사람","이야기꾼"]},
+  {id:33, name:"AI연구원",     emoji:"🧠", keyword:"artificial intelligence machine learning research",
+   work:"인공지능 알고리즘을 연구하고 개발해요. 미래를 바꿀 기술을 만드는 최첨단 직업이에요!",
+   person:null,
+   skills:["수학","논리력","코딩"], subjects:["수학","정보"], traits:["수학을 좋아하는 사람","미래지향적인 사람"]},
+  {id:34, name:"외교관",       emoji:"🌍", keyword:"diplomat embassy meeting international relations",
+   work:"나라를 대표해 외국과 협상해요. 조약을 맺고 국제 문제를 평화롭게 해결해요!",
+   person:null,
+   skills:["외국어","외교술","판단력"], subjects:["사회","영어","역사"], traits:["설득력 있는 사람","다양한 문화에 관심 있는 사람"]},
+  {id:35, name:"영화감독",     emoji:"🎬", keyword:"film director movie camera set director",
+   work:"영화 전체를 총지휘해요. 배우 연기를 지도하고 장면을 연출해 감동을 줘요!",
+   person:"봉준호, 스티븐 스필버그",
+   skills:["창의력","리더십","이야기력"], subjects:["국어","미술","사회"], traits:["상상력 풍부한 사람","리더십 있는 사람"]},
+  {id:36, name:"간호사",       emoji:"💉", keyword:"nurse hospital care patient help",
+   work:"환자의 상태를 관찰하고 치료를 도와요. 주사, 투약, 응급처치 등 바쁜 하루를 보내요!",
+   person:"플로렌스 나이팅게일",
+   skills:["배려심","집중력","체력"], subjects:["과학","생물"], traits:["사람을 돕고 싶은 사람","침착한 사람"]},
+  {id:37, name:"작곡가",       emoji:"🎼", keyword:"music composer notes piano studio recording",
+   work:"새로운 음악을 만들어요. 멜로디, 화음, 리듬을 조합해 세상에 없던 곡을 탄생시켜요!",
+   person:"모차르트, 한스 짐머",
+   skills:["음악적 감각","창의력","수학"], subjects:["음악","수학"], traits:["음악을 깊이 느끼는 사람","혼자 집중하는 사람"]},
+  {id:38, name:"농부",         emoji:"🌾", keyword:"farmer field agriculture harvest nature",
+   work:"논밭을 일구고 작물을 키워요. 씨를 뿌리고 수확해 사람들에게 먹을거리를 제공해요!",
+   person:null,
+   skills:["체력","인내심","자연지식"], subjects:["과학","사회"], traits:["자연을 좋아하는 사람","부지런한 사람"]},
+  {id:39, name:"판사",         emoji:"⚖️", keyword:"judge courtroom law justice gavel",
+   work:"법정에서 증거를 검토하고 판결을 내려요. 공정하게 법을 해석해 정의를 실현해요!",
+   person:null,
+   skills:["판단력","논리력","법지식"], subjects:["사회","국어","역사"], traits:["공정한 사람","꼼꼼한 사람"]},
+  {id:40, name:"스포츠트레이너",emoji:"🏋️", keyword:"personal trainer fitness gym exercise workout",
+   work:"운동 계획을 세우고 훈련을 지도해요. 부상을 예방하고 최상의 컨디션을 만들어요!",
+   person:null,
+   skills:["체력","전문지식","소통능력"], subjects:["체육","생물"], traits:["운동을 좋아하는 사람","열정적인 사람"]},
+  {id:41, name:"큐레이터",     emoji:"🖼️", keyword:"museum curator art exhibition gallery artwork",
+   work:"박물관·미술관에서 전시를 기획하고 작품을 관리해요. 관람객에게 예술을 설명해요!",
+   person:null,
+   skills:["예술지식","기획력","소통"], subjects:["미술","역사","사회"], traits:["예술을 좋아하는 사람","설명을 잘하는 사람"]},
+  {id:42, name:"드론조종사",   emoji:"🛸", keyword:"drone pilot technology aerial photography",
+   work:"드론을 조종해 촬영, 배달, 농업 지원 등을 해요. 최신 기술을 다루는 미래 직업이에요!",
+   person:null,
+   skills:["집중력","기술이해","판단력"], subjects:["과학","정보"], traits:["기계를 좋아하는 사람","손재주 있는 사람"]},
+  {id:43, name:"성우",         emoji:"🎙️", keyword:"voice actor studio recording microphone booth",
+   work:"애니메이션, 영화, 게임 캐릭터에 목소리를 입혀요. 감정 표현과 발성이 핵심이에요!",
+   person:null,
+   skills:["발성","연기력","표현력"], subjects:["국어","음악","예술"], traits:["목소리 표현을 좋아하는 사람","감수성 있는 사람"]},
+  {id:44, name:"사회복지사",   emoji:"🤝", keyword:"social worker community help people support",
+   work:"어려운 상황의 사람들을 찾아가 도움을 연결해요. 복지 서비스를 기획하고 지원해요!",
+   person:null,
+   skills:["공감","소통","인내심"], subjects:["사회","국어"], traits:["사람을 돕고 싶은 사람","따뜻한 마음을 가진 사람"]},
+  {id:45, name:"치과의사",     emoji:"🦷", keyword:"dentist teeth dental clinic chair",
+   work:"충치를 치료하고 이를 교정해요. 건강한 치아를 유지할 수 있도록 예방교육도 해요!",
+   person:null,
+   skills:["집중력","손재주","꼼꼼함"], subjects:["과학","생물"], traits:["세밀한 작업을 좋아하는 사람","침착한 사람"]},
+  {id:46, name:"웹개발자",     emoji:"💻", keyword:"web developer code laptop programming screen",
+   work:"홈페이지와 앱을 코딩으로 만들어요. 디자인을 구현하고 기능을 개발해 서비스를 만들어요!",
+   person:null,
+   skills:["논리력","코딩","꼼꼼함"], subjects:["수학","정보"], traits:["논리적인 사람","만들기를 좋아하는 사람"]},
+  {id:47, name:"도시계획가",   emoji:"🏙️", keyword:"urban planner city map design architecture",
+   work:"도시의 도로, 공원, 건물 배치를 계획해요. 사람들이 더 쾌적하게 살 수 있는 도시를 설계해요!",
+   person:null,
+   skills:["공간감각","창의력","분석력"], subjects:["사회","수학","미술"], traits:["꼼꼼한 사람","대규모 계획을 좋아하는 사람"]},
+  {id:48, name:"창업가",       emoji:"💡", keyword:"startup entrepreneur office business idea",
+   work:"새로운 아이디어로 사업을 시작해요. 팀을 구성하고 제품을 만들어 시장에 도전해요!",
+   person:"일론 머스크, 스티브 잡스",
+   skills:["창의력","리더십","도전정신"], subjects:["수학","사회","국어"], traits:["아이디어가 넘치는 사람","도전을 즐기는 사람"]},
+  {id:49, name:"국제구호활동가",emoji:"🕊️", keyword:"humanitarian aid volunteer help people",
+   work:"전쟁·재난 지역에서 식량, 의료, 쉼터를 제공해요. 전 세계 사람들을 도와요!",
+   person:null,
+   skills:["체력","공감","외국어"], subjects:["사회","영어","보건"], traits:["봉사를 좋아하는 사람","강한 의지를 가진 사람"]},
+  {id:50, name:"3D프린팅전문가",emoji:"🖨️", keyword:"3d printing manufacturing prototype model",
+   work:"3D 모델을 설계하고 프린팅해서 실제 물건을 만들어요. 의료기기, 건축 등에 활용돼요!",
+   person:null,
+   skills:["공간감각","수학","창의력"], subjects:["수학","미술","정보"], traits:["만들기를 좋아하는 사람","기술에 관심 있는 사람"]},
+  {id:51, name:"전통공예가",   emoji:"🏺", keyword:"traditional craft pottery handmade clay art",
+   work:"도자기, 한복, 나전칠기 등 전통 공예품을 손으로 만들어요. 문화를 계승하는 직업이에요!",
+   person:null,
+   skills:["손재주","인내심","예술감각"], subjects:["미술","역사","가정"], traits:["손으로 만드는 것을 좋아하는 사람","전통에 관심 있는 사람"]},
+  {id:52, name:"소셜미디어마케터",emoji:"📱", keyword:"social media marketing influencer content digital",
+   work:"인스타그램, 틱톡 등에서 브랜드를 홍보해요. 트렌드를 파악하고 콘텐츠를 기획해요!",
+   person:null,
+   skills:["창의력","소통","트렌드감각"], subjects:["국어","정보","미술"], traits:["SNS를 잘 활용하는 사람","사람들의 관심을 끄는 것을 좋아하는 사람"]},
+  {id:53, name:"물리치료사",   emoji:"🏃", keyword:"physiotherapist rehabilitation exercise patient",
+   work:"다친 부위를 회복시키는 운동 치료를 해요. 환자가 일상으로 돌아오도록 도와요!",
+   person:null,
+   skills:["체력","공감","전문지식"], subjects:["체육","생물","과학"], traits:["사람 돕기를 좋아하는 사람","꼼꼼한 사람"]},
+  {id:54, name:"천문학자",     emoji:"🔭", keyword:"astronomer telescope stars universe night sky",
+   work:"별, 은하, 행성 등 우주의 비밀을 연구해요. 망원경으로 밤하늘을 관측하고 데이터를 분석해요!",
+   person:"칼 세이건, 스티븐 호킹",
+   skills:["수학","과학지식","집중력"], subjects:["과학","수학"], traits:["우주가 궁금한 사람","혼자 깊이 연구하는 사람"]},
+  {id:55, name:"통역사",       emoji:"🗣️", keyword:"interpreter conference language speaking",
+   work:"회의나 강연에서 동시에 다른 언어로 통역해요. 두 개 이상의 언어를 완벽하게 구사해요!",
+   person:null,
+   skills:["언어능력","집중력","기억력"], subjects:["영어","국어","사회"], traits:["언어를 좋아하는 사람","빠른 두뇌 회전이 강한 사람"]},
+  {id:56, name:"영양사",       emoji:"🥗", keyword:"nutritionist dietitian food healthy meal",
+   work:"식단을 설계하고 영양 상담을 해요. 학교, 병원에서 건강한 식사를 계획해요!",
+   person:null,
+   skills:["과학지식","배려심","꼼꼼함"], subjects:["과학","가정","생물"], traits:["건강에 관심 있는 사람","사람 돕기를 좋아하는 사람"]},
+  {id:57, name:"게임스트리머", emoji:"🕹️", keyword:"streamer gaming live broadcast twitch youtube",
+   work:"게임하는 모습을 실시간으로 방송해요. 시청자와 소통하며 재미있는 콘텐츠를 만들어요!",
+   person:"페이커",
+   skills:["게임실력","소통능력","끈기"], subjects:["정보","국어"], traits:["게임을 잘하는 사람","사람들과 어울리는 사람"]},
+  {id:58, name:"AR/VR개발자", emoji:"🥽", keyword:"augmented reality VR AR virtual technology",
+   work:"AR·VR 앱을 개발해요. 현실에 디지털 정보를 덧입혀 새로운 경험을 만들어요!",
+   person:null,
+   skills:["코딩","창의력","수학"], subjects:["수학","정보","미술"], traits:["새로운 기술을 좋아하는 사람","창의적인 사람"]},
+  {id:59, name:"반려동물훈련사",emoji:"🐕", keyword:"dog trainer animal behavior pet training",
+   work:"강아지, 고양이 등 반려동물의 행동을 교정하고 훈련시켜요. 동물과 교감하는 직업이에요!",
+   person:null,
+   skills:["인내심","동물이해","배려심"], subjects:["과학","생물"], traits:["동물을 좋아하는 사람","침착하고 꾸준한 사람"]},
+  {id:60, name:"교육콘텐츠제작자",emoji:"🎓", keyword:"online education elearning teacher video",
+   work:"유튜브나 앱으로 배울 수 있는 교육 콘텐츠를 만들어요. 재미있게 공부하도록 도와요!",
+   person:null,
+   skills:["설명력","창의력","교과지식"], subjects:["전과목","정보"], traits:["설명하는 것을 좋아하는 사람","가르치는 것을 좋아하는 사람"]},
+  {id:61, name:"외과의사",     emoji:"🩺", keyword:"surgeon operation room medical team",
+   work:"몸 속 병이나 상처를 수술로 치료해요. 손의 정확도와 집중력이 생명을 살려요!",
+   person:"이국종",
+   skills:["집중력","손재주","냉철한 판단"], subjects:["과학","생물","수학"], traits:["압박을 견디는 사람","정밀한 사람"]},
+  {id:62, name:"조향사",       emoji:"🌹", keyword:"perfumer fragrance flower scent laboratory",
+   work:"다양한 향을 조합해 새로운 향수를 만들어요. 후각과 화학 지식이 핵심이에요!",
+   person:null,
+   skills:["후각","화학지식","창의력"], subjects:["과학","화학"], traits:["향기에 민감한 사람","꼼꼼한 사람"]},
+  {id:63, name:"기후과학자",   emoji:"🌡️", keyword:"climate scientist weather research data",
+   work:"기후 변화를 연구하고 미래 날씨를 예측해요. 환경 정책 결정에 도움을 줘요!",
+   person:null,
+   skills:["과학지식","분석력","수학"], subjects:["과학","수학","지리"], traits:["지구가 걱정되는 사람","데이터를 좋아하는 사람"]},
+  {id:64, name:"문화재보존가", emoji:"🏛️", keyword:"museum restoration art heritage conservation",
+   work:"오래된 유물이나 건물을 복원하고 보존해요. 역사와 문화를 미래 세대에 전달해요!",
+   person:null,
+   skills:["역사지식","손재주","꼼꼼함"], subjects:["역사","미술","과학"], traits:["역사를 좋아하는 사람","세심한 사람"]},
+];
+
+// ══════ 라운드 테마 ══════
+const THEMES = {
+  64:{bodyClass:"theme-t64",  bg1:"#4caf50",bg2:"#00bcd4",bg3:"#8bc34a",
+      badgeGrad:"linear-gradient(135deg,#43a047,#00acc1)",
+      pbBg:"#e0f2f1",pbFill:"linear-gradient(90deg,#43a047,#00acc1)",
+      vsBg:"linear-gradient(135deg,#43a047,#00acc1)",
+      dk:false,label:"64강",icon:"🌱",
+      flavor:"64개 직업 예선! 어떤 직업이 살아남을까?",
+      trBg:"linear-gradient(135deg,#2e7d32,#00838f)",trColor:"#ffffff"},
+  32:{bodyClass:"theme-t32",  bg1:"#3f51b5",bg2:"#9c27b0",bg3:"#00bcd4",
+      badgeGrad:"linear-gradient(135deg,#3949ab,#8e24aa)",
+      pbBg:"#ede7f6",pbFill:"linear-gradient(90deg,#3949ab,#8e24aa)",
+      vsBg:"linear-gradient(135deg,#3949ab,#8e24aa)",
+      dk:false,label:"32강",icon:"⚡",
+      flavor:"32강! 절반이 탈락! 이제 더 치열해져!",
+      trBg:"linear-gradient(135deg,#283593,#6a1b9a)",trColor:"#ffffff"},
+  16:{bodyClass:"theme-t16",  bg1:"#ff9800",bg2:"#e91e63",bg3:"#9c27b0",
+      badgeGrad:"linear-gradient(135deg,#fb8c00,#e91e63)",
+      pbBg:"#fff3e0",pbFill:"linear-gradient(90deg,#fb8c00,#e91e63)",
+      vsBg:"linear-gradient(135deg,#fb8c00,#e91e63)",
+      dk:false,label:"16강",icon:"🔥",
+      flavor:"16강! 이제 진짜 실력자들의 대결 시작!",
+      trBg:"linear-gradient(135deg,#e65100,#880e4f)",trColor:"#ffffff"},
+  8: {bodyClass:"theme-t8",   bg1:"#e91e63",bg2:"#9c27b0",bg3:"#f44336",
+      badgeGrad:"linear-gradient(135deg,#c2185b,#7b1fa2)",
+      pbBg:"#fce4ec",pbFill:"linear-gradient(90deg,#c2185b,#7b1fa2)",
+      vsBg:"linear-gradient(135deg,#c2185b,#7b1fa2)",
+      dk:false,label:"8강",icon:"💥",
+      flavor:"8강! TOP 8! 지금부터 진짜 승부!",
+      trBg:"linear-gradient(135deg,#880e4f,#4a148c)",trColor:"#ffffff"},
+  4: {bodyClass:"theme-t4",   bg1:"#673ab7",bg2:"#3f51b5",bg3:"#9c27b0",
+      badgeGrad:"linear-gradient(135deg,#512da8,#303f9f)",
+      pbBg:"#ede7f6",pbFill:"linear-gradient(90deg,#512da8,#303f9f)",
+      vsBg:"linear-gradient(135deg,#512da8,#303f9f)",
+      dk:false,label:"4강",icon:"🌟",
+      flavor:"4강 진출! 단 4개의 직업만 남았다!",
+      trBg:"linear-gradient(135deg,#311b92,#1a237e)",trColor:"#e8d5ff"},
+  2: {bodyClass:"theme-final", bg1:"#ffd700",bg2:"#ff6b6b",bg3:"#c471ed",
+      badgeGrad:"linear-gradient(135deg,#ffd700,#ff8e53)",
+      pbBg:"rgba(255,255,255,.12)",pbFill:"linear-gradient(90deg,#ffd700,#ff8e53)",
+      vsBg:"linear-gradient(135deg,#ffd700,#ff8e53)",
+      dk:true,label:"결승",icon:"🏆",
+      flavor:"드디어 결승! 나의 원픽 직업을 결정해!",
+      trBg:"linear-gradient(135deg,#0d0020,#000d2e)",trColor:"#ffd700"},
+};
+function getTheme(size){
+  if(size>=64) return THEMES[64];
+  if(size>=32) return THEMES[32];
+  if(size>=16) return THEMES[16];
+  if(size>=8)  return THEMES[8];
+  if(size>=4)  return THEMES[4];
+  return THEMES[2];
+}
+
+const ROUND_OPTS=[{label:"8강",count:8},{label:"16강",count:16},{label:"32강",count:32},{label:"64강",count:64}];
+
+const COMMENTS={
+  early:["예선 통과할 수 있을까? 🌱","처음엔 다 괜찮아 보이지ㅋㅋ","어떤 직업이 숨어있을까? 👀","아직 많이 남았어! 천천히 골라봐~","이 조합 쉽지 않은데? 😅"],
+  mid:  ["이제 슬슬 진지해지는군? 🤔","절반 왔어! 잘하고 있어! 💪","이 직업도 생각보다 매력적이지?","두 직업 다 좋은데... 어렵다 어려워!","오 여기서 이걸 고르네? 흥미롭다 ✨"],
+  late: ["TOP8! 이제 진짜 실력자 대결 🔥","고민된다... 나도 모르겠어ㅋㅋ","이 직업 최근에 인기 폭발이야!","찰떡 선택이다! 🎯","이 선택 평생 후회 없을 것 같은데?"],
+  final:["드디어 결승!! 🏆 역사적인 순간!","이게 바로 나의 원픽이다! ✨","심장이 두근두근... 어떤 걸 고를까?","결승에서 만난 두 직업! 운명의 대결 ⚡","이 선택이 너의 미래를 바꿀 수도?! 🚀"],
+};
+function pickComment(size,total){
+  const ratio=size/total;
+  let pool;
+  if(size===2) pool=COMMENTS.final;
+  else if(ratio>=.5) pool=COMMENTS.early;
+  else if(ratio>=.25) pool=COMMENTS.mid;
+  else pool=COMMENTS.late;
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+const PEXELS_KEY="5PTBHeIho5LvAdO7iszScz8DEHxt2pgktrGEl6T2lUF0I9A9dOLIUxoS";
+const imgCache={};
+
+function useJobImg(keyword){
+  const [src,setSrc]=useState(imgCache[keyword]||null);
+  const [loading,setLoading]=useState(!imgCache[keyword]);
+  useEffect(()=>{
+    if(imgCache[keyword]){setSrc(imgCache[keyword]);setLoading(false);return;}
+    let dead=false;setLoading(true);
+    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword)}&per_page=3&orientation=square`,
+      {headers:{Authorization:PEXELS_KEY}})
+      .then(r=>r.json()).then(d=>{
+        if(!dead&&d.photos&&d.photos.length){
+          const u=d.photos[Math.floor(Math.random()*Math.min(d.photos.length,3))].src.medium;
+          imgCache[keyword]=u;setSrRc(u);
+        }
+      }).catch(()=>{}).finally(()=>{if(!dead)setLoading(false);});
+    return()=>{dead=true;};
+  },[keyword]);
+  return {src,loading};
+}
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+// ══════ 배경 ══════
+function BgDeco({t}){
+  const c=t||{bg1:"#ff6b6b",bg2:"#c471ed",bg3:"#12c2e9"};
+  return(
+    <div className="bg-deco">
+      <div className="bg-blob" style={{width:420,height:420,background:`radial-gradient(${c.bg1},transparent)`,top:-130,left:-130}}/>
+      <div className="bg-blob" style={{width:360,height:360,background:`radial-gradient(${c.bg2},transparent)`,bottom:-90,right:-90}}/>
+      <div className="bg-blob" style={{width:300,height:300,background:`radial-gradient(${c.bg3},transparent)`,top:"42%",left:"32%"}}/>
+    </div>
+  );
+}
+
+// ══════ 라운드 전환 ══════
+function RoundTransition({theme,show,onDone}){
+  useEffect(()=>{if(!show)return;const t=setTimeout(onDone,1900);return()=>clearTimeout(t);},[show]);
+  if(!show)return null;
+  return(
+    <div style={{position:"fixed",inset:0,zIndex:999,background:theme.trBg,display:"flex",alignItems:"center",justifyContent:"center",flexDirection:"column",gap:"1rem",animation:"transitionFade 1.9s ease forwards"}}>
+      <div style={{textAlign:"center",animation:"roundIn 1.6s cubic-bezier(.34,1.56,.64,1) forwards"}}>
+        <div style={{fontSize:"5rem",marginBottom:".5rem"}}>{theme.icon}</div>
+        <div style={{fontFamily:"'Jua',sans-serif",fontSize:"3rem",color:theme.trColor,textShadow:"0 4px 24px rgba(0,0,0,.4)"}}>{theme.label}</div>
+        <div style={{fontSize:"1rem",color:theme.trColor,opacity:.8,marginTop:".5rem"}}>{theme.flavor}</div>
+      </div>
+    </div>
+  );
+}
+
+// ══════ 직업 카드 ══════
+function JobCard({job,onClick,chosen,unchosen,isDark}){
+  const {src,loading}=useJobImg(job.keyword);
+  const cls=["job-card",chosen?"chosen":"",unchosen?"unchosen":"",isDark?"dark-card":""].join(" ");
+  return(
+    <div className={cls} onClick={()=>!chosen&&!unchosen&&onClick(job)}>
+      <div className="card-img-wrap">
+        {loading&&<div className="card-skeleton"/>}
+        {!loading&&src&&<img className="card-img" src={src} alt={job.name} loading="lazy"/>}
+        {!loading&&!src&&<div className="card-emoji-fb">{job.emoji}</div>}
+      </div>
+      <div className="card-body">
+        <div className={`job-name jua ${isDark?"dk":""}`}>{job.emoji} {job.name}</div>
+        <div className={`job-work ${isDark?"dk":""}`}>{job.work}</div>
+        {job.person&&<div className={`job-person ${isDark?"dk":""}`}>✨ {job.person}</div>}
+        <div className={`pick-hint ${isDark?"dk":""}`}>👆 탭해서 선택!</div>
+      </div>
+    </div>
+  );
+}
+
+// ══════ 결과 화면 ══════
+function ResultScreen({winner,nickname,onRetry}){
+  const {src,loading}=useJobImg(winner.keyword);
+  const canvasRef=useRef(null);
+  useEffect(()=>{
+    const cv=canvasRef.current;if(!cv)return;
+    const ctx=cv.getContext("2d");cv.width=window.innerWidth;cv.height=window.innerHeight;
+    const colors=["#ff6b6b","#c471ed","#12c2e9","#ffd93d","#6bcb77","#ff8e53","#a855f7","#ec4899"];
+    const pieces=Array.from({length:160},()=>({
+      x:Math.random()*cv.width,y:Math.random()*-cv.height,
+      r:Math.random()*9+4,color:colors[Math.floor(Math.random()*colors.length)],
+      speed:Math.random()*3.5+1.5,spin:(Math.random()-.5)*.22,angle:0,
+      shape:Math.random()>.5?"rect":"circle",
+    }));
+    let raf;
+    const draw=()=>{
+      ctx.clearRect(0,0,cv.width,cv.height);
+      pieces.forEach(p=>{
+        ctx.save();ctx.translate(p.x,p.y);ctx.rotate(p.angle);ctx.fillStyle=p.color;
+        if(p.shape==="circle"){ctx.beginPath();ctx.arc(0,0,p.r/2,0,Math.PI*2);ctx.fill();}
+        else ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.55);
+        ctx.restore();p.y+=p.speed;p.angle+=p.spin;
+        if(p.y>cv.height){p.y=-20;p.x=Math.random()*cv.width;}
+      });
+      raf=requestAnimationFrame(draw);
+    };
+    draw();const t=setTimeout(()=>cancelAnimationFrame(raf),7000);
+    return()=>{cancelAnimationFrame(raf);clearTimeout(t);};
+  },[]);
+
+  const ytUrl=`https://www.youtube.com/results?search_query=${encodeURIComponent(winner.name+" 인터뷰")}`;
+  const searchUrl=`https://www.google.com/search?q=${encodeURIComponent(winner.name+" 직업 어린이 진로")}`;
+  const careerUrl="https://www.career.go.kr/cnet/front/main/main.do";
+
+  return(
+    <div className="screen-result">
+      <canvas ref={canvasRef} style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}/>
+      <div className="result-card">
+        <span className="winner-crown jua">🏆</span>
+        <p className="result-title jua"><span className="nick-hl">{nickname}</span>의 원픽 직업!</p>
+        <div className="winner-img-wrap">
+          {loading&&<div className="card-skeleton" style={{position:"absolute",inset:0}}/>}
+          {!loading&&src&&<img className="winner-img" src={src} alt={winner.name}/>}
+          {!loading&&!src&&<div className="winner-emoji-big">{winner.emoji}</div>}
+        </div>
+        <h2 className="winner-name jua">{winner.emoji} {winner.name}</h2>
+        <p className="winner-desc">{winner.work}</p>
+        {winner.person&&<div className="winner-person-box">✨ 대표 인물: {winner.person}</div>}
+        <div className="info-section">
+          <div className="info-label">💪 필요한 능력</div>
+          <div className="tag-row">{winner.skills.map(s=><span key={s} className="tag tag-skill">{s}</span>)}</div>
+        </div>
+        <div className="info-section">
+          <div className="info-label">📖 관련 교과</div>
+          <div className="tag-row">{winner.subjects.map(s=><span key={s} className="tag tag-subject">{s}</span>)}</div>
+        </div>
+        <div className="info-section">
+          <div className="info-label">🙋 이런 사람에게 잘 맞아요</div>
+          <div className="tag-row">{winner.traits.map(t=><span key={t} className="tag tag-trait">{t}</span>)}</div>
+        </div>
+        <div className="link-section">
+          <a className="link-btn" href={searchUrl} target="_blank" rel="noreferrer">
+            <span className="link-icon">🔍</span> 구글에서 더 알아보기
+          </a>
+          <a className="link-btn" href={ytUrl} target="_blank" rel="noreferrer">
+            <span className="link-icon">▶️</span> {winner.name} 인터뷰 영상 보기
+          </a>
+          <a className="link-btn" href={careerUrl} target="_blank" rel="noreferrer">
+            <span className="link-icon">🌟</span> 커리어넷에서 진로 탐색하기
+          </a>
+        </div>
+        <button className="retry-btn jua" onClick={onRetry}>🔄 다시 하기</button>
+      </div>
+    </div>
+  );
+}
+
+// ══════ 게임 화면 ══════
+function GameScreen({nickname,jobs,total,onFinish}){
+  const [bracket,setBracket]=useState(()=>shuffle([...jobs]));
+  const [cur,setCur]=useState(0);
+  const [winners,setWinners]=useState([]);
+  const [chosen,setChosen]=useState(null);
+  const [unchosen,setUnchosen]=useState(null);
+  const [comment,setComment]=useState(()=>pickComment(jobs.length,total));
+  const [showTrans,setShowTrans]=useState(false);
+  const [pending,setPending]=useState(null);
+
+  const theme=getTheme(bracket.length);
+  const pairs=Math.floor(bracket.length/2);
+  const done=Math.floor(cur/2);
+
+  useEffect(()=>{document.body.className=theme.bodyClass;return()=>{document.body.className="theme-lobby";};},[theme.bodyClass]);
+
+  const pick=useCallback((picked)=>{
+    const other=bracket[cur]===picked?bracket[cur+1]:bracket[cur];
+    setChosen(picked.id);setUnchosen(other.id);
+    setComment(pickComment(bracket.length,total));
+    setTimeout(()=>{
+      setChosen(null);setUnchosen(null);
+      const nw=[...winners,picked];
+      const nc=cur+2;
+      if(nc>=bracket.length){
+        if(nw.length===1){onFinish(nw[0]);return;}
+        const nb=shuffle(nw);
+        setPending(nb);setShowTrans(true);
+      } else {
+        setWinners(nw);setCur(nc);
+      }
+    },480);
+  },[cur,bracket,winners,onFinish,total]);
+
+  const onTransDone=()=>{
+    setShowTrans(false);
+    setBracket(pending);setWinners([]);setCur(0);setPending(null);
+  };
+
+  const nextTheme=pending?getTheme(pending.length):theme;
+  const left=bracket[cur];const right=bracket[cur+1];
+
+  return(
+    <>
+      <RoundTransition theme={nextTheme} show={showTrans} onDone={onTransDone}/>
+      <div className="screen-game">
+        <BgDeco t={theme}/>
+        <div className="game-header">
+          <div className="progress-info">
+            <span className="round-badge jua" style={{background:theme.badgeGrad}}>
+              {theme.icon} {theme.label}
+            </span>
+            <span style={{fontSize:".78rem",color:theme.dk?"rgba(255,255,255,.55)":"#bbb",fontWeight:700}}>
+              {done+1} / {pairs} 경기
+            </span>
+          </div>
+          <div className="progress-bar-bg" style={{background:theme.pbBg}}>
+            <div className="progress-bar-fill" style={{width:`${Math.min((done/pairs)*100,100)}%`,background:theme.pbFill}}/>
+          </div>
+        </div>
+
+        <div className="vs-area">
+          <p className="jua" style={{fontSize:".88rem",color:theme.dk?"rgba(255,255,255,.45)":"#bbb"}}>
+              💰경제성 ⚖️삶의 질 🌟자기만족 🚀미래성 🎖️사회적 요소 모두 고려해서 더 끌리는 직업을 골라봐!
+          </p>
+          <div className="cards-row">
+            {left&&right&&<>
+              <JobCard key={`${left.id}-${cur}-${bracket.length}`} job={left}
+                onClick={pick} chosen={chosen===left.id} unchosen={unchosen===left.id} isDark={theme.dk}/>
+              <div className="vs-badge" style={{background:theme.vsBg,boxShadow:"0 8px 24px rgba(0,0,0,.22)"}}>
+                <span className="jua">VS</span>
+              </div>
+              <JobCard key={`${right.id}-${cur}-${bracket.length}`} job={right}
+                onClick={pick} chosen={chosen===right.id} unchosen={unchosen===right.id} isDark={theme.dk}/>
+            </>}
+          </div>
+          <div className={`comment-box ${theme.dk?"dk":"lt"}`} key={comment}>{comment}</div>
+          <p style={{fontSize:".72rem",color:theme.dk?"rgba(255,255,255,.6)":"#ddd",marginTop:".2rem"}}>
+            {nickname} 진행중 ✨ 남은 직업 {bracket.length - done*2}개
+          </p>
+        </div>
+      </div>
+    </>
+  );
+}
+
+// ══════ 닉네임 화면 ══════
+function NicknameScreen({onStart}){
+  const [nick,setNick]=useState("");
+  const [cnt,setCnt]=useState(16);
+  return(
+    <div className="screen-nick">
+      <BgDeco t={{bg1:"#ff6b6b",bg2:"#c471ed",bg3:"#12c2e9"}}/>
+      <div className="nick-card">
+        <div className="title-badge jua">✨ 진로 탐색 게임</div>
+        <h1 className="main-title jua">직업<br/>월드컵</h1>
+        <p className="sub-title">내 마음에 드는 직업을 찾아봐! 🔍</p>
+        <input className="nick-input jua" placeholder="닉네임을 입력해줘! 😊"
+          value={nick} onChange={e=>setNick(e.target.value)}
+          onKeyDown={e=>e.key==="Enter"&&nick.trim()&&onStart(nick.trim(),cnt)}
+          maxLength={10} autoFocus/>
+        <div style={{margin:".9rem 0 .4rem",fontSize:".8rem",color:"#bbb",fontWeight:700}}>몇 강부터 시작할까?</div>
+        <div className="round-select">
+          {ROUND_OPTS.map(o=>(
+            <button key={o.count} className={`round-btn jua ${cnt===o.count?"active":""}`}
+              onClick={()=>setCnt(o.count)}>{o.label}</button>
+          ))}
+        </div>
+        <div style={{background:"#faf8ff",borderRadius:14,padding:".75rem 1rem",marginBottom:"1.2rem",fontSize:".75rem",color:"#aaa",lineHeight:1.8,textAlign:"left"}}>
+          <span style={{color:"#c471ed",fontWeight:700}}>8강</span> 약 4분 &nbsp;|&nbsp;
+          <span style={{color:"#3949ab",fontWeight:700}}>16강</span> 약 8분 &nbsp;|&nbsp;
+          <span style={{color:"#fb8c00",fontWeight:700}}>32강</span> 약 16분 &nbsp;|&nbsp;
+          <span style={{color:"#43a047",fontWeight:700}}>64강</span> 약 30분<br/>
+          <span style={{fontSize:".7rem"}}>강이 올라갈수록 더 다양한 직업을 탐색할 수 있어요!</span>
+        </div>
+        <button className="start-btn jua" disabled={!nick.trim()}
+          onClick={()=>onStart(nick.trim(),cnt)}>게임 시작! 🚀</button>
+        <p style={{marginTop:"1rem",fontSize:".73rem",color:"#ccc",lineHeight:1.8}}>
+          정답은 없어요! 내 마음이 가는 곳이 답이에요 💝<br/>
+          선택을 반복하다 보면 나에게 맞는 직업이 나와요!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ══════ 루트 ══════
+function App(){
+  const [screen,setScreen]=useState("nick");
+  const [nickname,setNickname]=useState("");
+  const [gameJobs,setGameJobs]=useState([]);
+  const [total,setTotal]=useState(16);
+  const [winner,setWinner]=useState(null);
+
+  useEffect(()=>{
+    if(screen==="nick"||screen==="result") document.body.className="theme-lobby";
+  },[screen]);
+
+  const start=(nick,cnt)=>{
+    const c=Math.min(cnt,ALL_JOBS.length);
+    setNickname(nick);setTotal(c);
+    setGameJobs(shuffle(ALL_JOBS).slice(0,c));
+    setScreen("game");
+  };
+  const finish=(job)=>{setWinner(job);document.body.className="theme-result";setScreen("result");};
+  const retry=()=>{setWinner(null);document.body.className="theme-lobby";setScreen("nick");};
+
+  if(screen==="nick")   return <NicknameScreen onStart={start}/>;
+  if(screen==="game")   return <GameScreen nickname={nickname} jobs={gameJobs} total={total} onFinish={finish}/>;
+  if(screen==="result") return <ResultScreen winner={winner} nickname={nickname} onRetry={retry}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
