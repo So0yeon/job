@@ -471,7 +471,7 @@ function pickComment(size,total){
   return pool[Math.floor(Math.random()*pool.length)];
 }
 
-const PEXELS_KEY="5PTBHeIho5LvAdO7iszScz8DEHxt2pgktrGEl6T2lUF0I9A9dOLIUxoS";
+const PEXELS_KEY="7mOBQN6P4HqNHFMVIRfPy73CzHBDpE3GqHb2s4A6r43q7fLXGjEBBpNJ";
 const imgCache={};
 
 function useJobImg(keyword){
@@ -487,7 +487,7 @@ function useJobImg(keyword){
           const u=d.photos[Math.floor(Math.random()*Math.min(d.photos.length,3))].src.medium;
           imgCache[keyword]=u;setSrc(u);
         }
-      })..catc(()=>{}).finally(()=>{if(!dead)setLoading(false);});
+      }).catch(()=>{}).finally(()=>{if(!dead)setLoading(false);});
     return()=>{dead=true;};
   },[keyword]);
   return {src,loading};
@@ -688,7 +688,7 @@ function GameScreen({nickname,jobs,total,onFinish}){
 
         <div className="vs-area">
           <p className="jua" style={{fontSize:".88rem",color:theme.dk?"rgba(255,255,255,.45)":"#bbb"}}>
-              💰경제성 ⚖️삶의 질 🌟자기만족 🚀미래성 🎖️사회적 요소 모두 고려해서 더 끌리는 직업을 골라봐!
+            💰경제성 ⚖️삶의 균형 🌟적성 🚀미래성 🎖️사회적 인정 등을 고려해 더 끌리는 직업을 골라봐!
           </p>
           <div className="cards-row">
             {left&&right&&<>
@@ -702,7 +702,7 @@ function GameScreen({nickname,jobs,total,onFinish}){
             </>}
           </div>
           <div className={`comment-box ${theme.dk?"dk":"lt"}`} key={comment}>{comment}</div>
-          <p style={{fontSize:".72rem",color:theme.dk?"rgba(255,255,255,.6)":"#ddd",marginTop:".2rem"}}>
+          <p style={{fontSize:".72rem",color:theme.dk?"rgba(255,255,255,.3)":"#ddd",marginTop:".2rem"}}>
             {nickname} 진행중 ✨ 남은 직업 {bracket.length - done*2}개
           </p>
         </div>
