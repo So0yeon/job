@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>✨ 직업 월드컵</title>
+<link href="https://fonts.googleapis.com/css2?family=Jua&family=Nanum+Gothic:wght@400;700;800&display=swap" rel="stylesheet"/>
+<script src="https://unpkg.com/react@18/umd/react.development.js"></script>
+<script src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<style>
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Nanum Gothic',sans-serif;background:linear-gradient(135deg,#fff9f0 0%,#fff0fa 50%,#f0f4ff 100%);min-height:100vh;overflow-x:hidden}
+  #root{min-height:100vh}
+
+  .jua{font-family:'Jua',sans-serif}
+
+  /* 배경 장식 */
+  .bg-deco{position:fixed;inset:0;pointer-events:none;z-index:0;overflow:hidden}
+  .bg-blob{position:absolute;border-radius:50%;opacity:.15}
+
+  /* 닉네임 화면 */
+  .screen-nick{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem;position:relative;z-index:1}
+  .nick-card{background:white;border-radius:32px;padding:3rem 2.5rem;max-width:440px;width:100%;box-shadow:0 20px 60px rgba(255,130,100,.15),0 4px 16px rgba(0,0,0,.06);text-align:center;animation:popIn .6s cubic-bezier(.34,1.56,.64,1)}
+
+  /* 타이틀 */
+  .title-badge{display:inline-flex;align-items:center;gap:.5rem;background:linear-gradient(135deg,#ff6b6b,#ff8e53);color:white;padding:.5rem 1.4rem;border-radius:99px;font-size:.9rem;margin-bottom:1.2rem;font-weight:700}
+  .main-title{font-size:2.8rem;line-height:1.15;margin-bottom:.5rem;background:linear-gradient(135deg,#ff6b6b 0%,#c471ed 50%,#12c2e9 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+  .sub-title{color:#888;font-size:.95rem;margin-bottom:2rem}
+
+  /* 입력 */
+  .nick-input{width:100%;padding:1rem 1.4rem;border:2.5px solid #f0e0ff;border-radius:16px;font-size:1.2rem;font-family:'Jua',sans-serif;outline:none;transition:all .2s;background:#fafafa;text-align:center}
+  .nick-input:focus{border-color:#c471ed;background:white;box-shadow:0 0 0 4px rgba(196,113,237,.15)}
+  .nick-input::placeholder{color:#ccc}
+
+  /* 라운드 선택 */
+  .round-select{display:flex;gap:.7rem;justify-content:center;margin:1.2rem 0 1.8rem;flex-wrap:wrap}
+  .round-btn{padding:.6rem 1.3rem;border-radius:99px;border:2.5px solid #e8e0ff;background:white;font-family:'Jua',sans-serif;font-size:.95rem;cursor:pointer;transition:all .2s;color:#888}
+  .round-btn.active{background:linear-gradient(135deg,#c471ed,#12c2e9);color:white;border-color:transparent;transform:scale(1.05)}
+
+  /* 시작 버튼 */
+  .start-btn{width:100%;padding:1.1rem;border-radius:20px;border:none;background:linear-gradient(135deg,#ff6b6b 0%,#ff8e53 100%);color:white;font-family:'Jua',sans-serif;font-size:1.4rem;cursor:pointer;transition:all .25s;box-shadow:0 8px 24px rgba(255,107,107,.35)}
+  .start-btn:hover{transform:translateY(-3px) scale(1.02);box-shadow:0 12px 32px rgba(255,107,107,.45)}
+  .start-btn:active{transform:translateY(0) scale(.98)}
+  .start-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+
+  /* 게임 화면 */
+  .screen-game{min-height:100vh;display:flex;flex-direction:column;padding:1.2rem;position:relative;z-index:1}
+
+  /* 진행바 */
+  .progress-wrap{margin-bottom:1rem}
+  .progress-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:.5rem}
+  .progress-bar-bg{height:10px;background:#f0e8ff;border-radius:99px;overflow:hidden}
+  .progress-bar-fill{height:100%;background:linear-gradient(90deg,#c471ed,#12c2e9);border-radius:99px;transition:width .5s ease}
+
+  /* 라운드 배지 */
+  .round-badge{background:linear-gradient(135deg,#c471ed,#12c2e9);color:white;padding:.35rem 1rem;border-radius:99px;font-size:.85rem;font-weight:700}
+
+  /* VS 영역 */
+  .vs-area{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem}
+  .cards-row{display:flex;gap:1rem;align-items:center;width:100%;max-width:600px}
+
+  /* 직업 카드 */
+  .job-card{flex:1;background:white;border-radius:28px;overflow:hidden;cursor:pointer;box-shadow:0 8px 32px rgba(0,0,0,.08);transition:all .25s cubic-bezier(.34,1.56,.64,1);border:3px solid transparent;position:relative}
+  .job-card:hover{transform:translateY(-8px) scale(1.04);box-shadow:0 20px 50px rgba(0,0,0,.15);border-color:#c471ed}
+  .job-card:active{transform:scale(.96)}
+  .job-card.chosen{animation:cardWin .4s ease forwards}
+  .job-card.unchosen{animation:cardLose .4s ease forwards}
+
+  .card-img-wrap{width:100%;aspect-ratio:1;position:relative;overflow:hidden;background:linear-gradient(135deg,#f8f0ff,#f0f4ff)}
+  .card-img{width:100%;height:100%;object-fit:cover;transition:transform .3s}
+  .job-card:hover .card-img{transform:scale(1.08)}
+  .card-skeleton{width:100%;height:100%;background:linear-gradient(90deg,#f0e8ff 25%,#e8d8ff 50%,#f0e8ff 75%);background-size:200%;animation:shimmer 1.5s infinite}
+  .card-emoji{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:4rem}
+
+  .card-body{padding:1rem .8rem 1.2rem;text-align:center}
+  .job-name{font-size:1.2rem;color:#333;font-weight:700;margin-bottom:.3rem}
+  .job-emoji-small{font-size:1.1rem}
+  .pick-hint{font-size:.78rem;color:#bbb;margin-top:.3rem}
+
+  /* VS 배지 */
+  .vs-badge{width:56px;height:56px;background:linear-gradient(135deg,#ff6b6b,#ff8e53);border-radius:50%;display:flex;align-items:center;justify-content:center;color:white;font-size:1.3rem;font-weight:900;font-family:'Jua',sans-serif;flex-shrink:0;box-shadow:0 8px 24px rgba(255,107,107,.4);animation:pulse 2s infinite}
+
+  /* 멘트 */
+  .comment-box{background:white;border-radius:16px;padding:.7rem 1.4rem;font-size:.9rem;color:#666;box-shadow:0 4px 16px rgba(0,0,0,.06);max-width:480px;text-align:center;animation:slideUp .4s ease}
+
+  /* 결과 화면 */
+  .screen-result{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:1.5rem;position:relative;z-index:1;text-align:center}
+  .confetti-area{position:fixed;inset:0;pointer-events:none;z-index:0}
+
+  .result-card{background:white;border-radius:36px;padding:2.5rem 2rem;max-width:500px;width:100%;box-shadow:0 24px 80px rgba(196,113,237,.2);animation:popIn .7s cubic-bezier(.34,1.56,.64,1);position:relative;z-index:1}
+  .winner-crown{font-size:3.5rem;animation:bounce 1s ease infinite alternate;display:block;margin-bottom:.5rem}
+  .result-title{font-size:1rem;color:#aaa;margin-bottom:.3rem}
+  .nick-highlight{color:#c471ed;font-size:1.15rem}
+
+  .winner-img-wrap{width:200px;height:200px;margin:1.2rem auto;border-radius:28px;overflow:hidden;box-shadow:0 12px 40px rgba(196,113,237,.25);background:linear-gradient(135deg,#f8f0ff,#f0f4ff);position:relative}
+  .winner-img{width:100%;height:100%;object-fit:cover}
+  .winner-emoji-big{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:6rem}
+
+  .winner-name{font-size:2.2rem;background:linear-gradient(135deg,#ff6b6b,#c471ed);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:.5rem 0}
+  .winner-desc{color:#666;font-size:.92rem;margin-bottom:1.5rem;line-height:1.6}
+
+  /* 정보 태그들 */
+  .info-section{margin-bottom:1.2rem;text-align:left}
+  .info-label{font-size:.8rem;color:#aaa;font-weight:700;letter-spacing:.05em;margin-bottom:.5rem;text-transform:uppercase}
+  .tag-row{display:flex;flex-wrap:wrap;gap:.5rem}
+  .tag{padding:.4rem .9rem;border-radius:99px;font-size:.82rem;font-weight:700}
+  .tag-skill{background:#f0e8ff;color:#9c4dd8}
+  .tag-subject{background:#e8f4ff;color:#3b82f6}
+  .tag-trait{background:#fff0e8;color:#ea580c}
+
+  /* 관련 링크 */
+  .link-section{margin-top:1.2rem}
+  .link-btn{display:flex;align-items:center;gap:.6rem;padding:.8rem 1.1rem;border-radius:16px;background:#f8f4ff;border:1.5px solid #e8d8ff;text-decoration:none;color:#7c3aed;font-size:.88rem;font-weight:700;transition:all .2s;margin-bottom:.6rem}
+  .link-btn:hover{background:#f0e4ff;transform:translateX(4px)}
+  .link-icon{font-size:1.2rem;flex-shrink:0}
+
+  /* 다시 버튼 */
+  .retry-btn{width:100%;margin-top:1.5rem;padding:1rem;border-radius:20px;border:none;background:linear-gradient(135deg,#c471ed,#12c2e9);color:white;font-family:'Jua',sans-serif;font-size:1.3rem;cursor:pointer;transition:all .25s;box-shadow:0 8px 24px rgba(196,113,237,.35)}
+  .retry-btn:hover{transform:translateY(-3px);box-shadow:0 14px 36px rgba(196,113,237,.45)}
+
+  /* 애니메이션 */
+  @keyframes popIn{from{opacity:0;transform:scale(.7)}to{opacity:1;transform:scale(1)}}
+  @keyframes slideUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+  @keyframes shimmer{0%{background-position:200%}100%{background-position:-200%}}
+  @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+  @keyframes bounce{from{transform:translateY(0)}to{transform:translateY(-10px)}}
+  @keyframes cardWin{0%{transform:scale(1)}50%{transform:scale(1.08)}100%{transform:scale(1)}}
+  @keyframes cardLose{0%{opacity:1}100%{opacity:.3;transform:scale(.92)}}
+  @keyframes confettiDrop{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(110vh) rotate(720deg);opacity:0}}
+  @keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-20px)}}
+
+  /* 반응형 */
+  @media(max-width:480px){
+    .main-title{font-size:2.2rem}
+    .job-name{font-size:1rem}
+    .cards-row{gap:.7rem}
+    .winner-name{font-size:1.8rem}
+  }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+// ─── 직업 데이터 ───────────────────────────────
+const ALL_JOBS = [
+  { id:1,  name:"요리사",     emoji:"👨‍🍳", keyword:"chef cooking illustration",       desc:"맛있는 음식을 만들어 사람들을 행복하게 해요!", skills:["창의력","손재주","인내심"], subjects:["가정","과학"], traits:["꼼꼼한 사람","요리를 좋아하는 사람"], search:"요리사 직업 어린이", youtube:"요리사 되는 법" },
+  { id:2,  name:"수의사",     emoji:"🐾", keyword:"veterinarian animals cute",         desc:"아픈 동물들을 치료해 건강하게 해주는 의사예요!", skills:["배려심","집중력","책임감"], subjects:["과학","생물"], traits:["동물을 좋아하는 사람","침착한 사람"], search:"수의사 직업 어린이", youtube:"수의사 되는 법" },
+  { id:3,  name:"게임개발자", emoji:"🎮", keyword:"game developer coding illustration", desc:"재미있는 게임을 기획하고 직접 만들어요!", skills:["논리력","창의력","집중력"], subjects:["수학","정보"], traits:["게임을 좋아하는 사람","끈기 있는 사람"], search:"게임개발자 직업 어린이", youtube:"게임개발자 되는 법" },
+  { id:4,  name:"교사",       emoji:"📚", keyword:"teacher classroom children",        desc:"학생들에게 지식을 가르치고 꿈을 키워줘요!", skills:["발표력","인내심","리더십"], subjects:["전과목","교육학"], traits:["설명을 잘하는 사람","친절한 사람"], search:"교사 직업 어린이", youtube:"선생님 되는 법" },
+  { id:5,  name:"웹툰작가",   emoji:"🎨", keyword:"webtoon comic artist illustration",  desc:"상상력을 그림으로 표현해 이야기를 만들어요!", skills:["창의력","그림실력","이야기력"], subjects:["미술","국어"], traits:["그림 그리기 좋아하는 사람","상상력 풍부한 사람"], search:"웹툰작가 직업 어린이", youtube:"웹툰작가 되는 법" },
+  { id:6,  name:"경찰관",     emoji:"👮", keyword:"police officer cartoon kids",        desc:"사람들의 안전을 지키고 질서를 유지해요!", skills:["체력","용기","판단력"], subjects:["사회","체육"], traits:["정의감 있는 사람","체력이 좋은 사람"], search:"경찰관 직업 어린이", youtube:"경찰관 되는 법" },
+  { id:7,  name:"우주비행사", emoji:"🚀", keyword:"astronaut space cute illustration",  desc:"우주를 탐험하고 새로운 세계를 발견해요!", skills:["체력","과학지식","집중력"], subjects:["과학","수학","체육"], traits:["도전을 좋아하는 사람","과학을 좋아하는 사람"], search:"우주비행사 직업 어린이", youtube:"우주비행사 되는 법" },
+  { id:8,  name:"의사",       emoji:"👨‍⚕️", keyword:"doctor hospital cute cartoon",   desc:"아픈 사람들을 치료해서 건강을 되찾아줘요!", skills:["집중력","책임감","공감능력"], subjects:["과학","생물","수학"], traits:["꼼꼼한 사람","봉사 정신이 있는 사람"], search:"의사 직업 어린이", youtube:"의사 되는 법" },
+  { id:9,  name:"음악가",     emoji:"🎵", keyword:"musician music illustration cute",  desc:"아름다운 음악을 만들고 연주해 감동을 줘요!", skills:["음감","창의력","인내심"], subjects:["음악","예술"], traits:["음악을 좋아하는 사람","감수성이 풍부한 사람"], search:"음악가 직업 어린이", youtube:"음악가 되는 법" },
+  { id:10, name:"운동선수",   emoji:"⚽", keyword:"athlete sports cartoon kids",       desc:"열심히 훈련해 최고의 실력을 보여줘요!", skills:["체력","집중력","끈기"], subjects:["체육","과학"], traits:["운동을 좋아하는 사람","승부욕이 있는 사람"], search:"운동선수 직업 어린이", youtube:"운동선수 되는 법" },
+  { id:11, name:"건축가",     emoji:"🏗️", keyword:"architect building design",        desc:"멋진 건물을 설계해 세상을 아름답게 해요!", skills:["창의력","수학","공간감각"], subjects:["수학","미술","과학"], traits:["꼼꼼한 사람","창의력 있는 사람"], search:"건축가 직업 어린이", youtube:"건축가 되는 법" },
+  { id:12, name:"소방관",     emoji:"🚒", keyword:"firefighter cute cartoon",          desc:"화재와 재난으로부터 사람들을 구해요!", skills:["체력","용기","팀워크"], subjects:["체육","과학"], traits:["용감한 사람","협동심 있는 사람"], search:"소방관 직업 어린이", youtube:"소방관 되는 법" },
+  { id:13, name:"유튜버",     emoji:"📹", keyword:"youtuber content creator",          desc:"재미있는 영상을 만들어 사람들에게 즐거움을 줘요!", skills:["창의력","발표력","편집력"], subjects:["국어","미술","정보"], traits:["끼 있는 사람","기획력 있는 사람"], search:"유튜버 직업 어린이", youtube:"유튜버 되는 법" },
+  { id:14, name:"과학자",     emoji:"🔬", keyword:"scientist laboratory illustration", desc:"새로운 것을 연구하고 발견해 세상을 바꿔요!", skills:["호기심","집중력","분석력"], subjects:["과학","수학"], traits:["탐구를 좋아하는 사람","끈기 있는 사람"], search:"과학자 직업 어린이", youtube:"과학자 되는 법" },
+  { id:15, name:"디자이너",   emoji:"✏️", keyword:"designer creative illustration",   desc:"아름다운 디자인으로 세상을 더 멋지게 꾸며요!", skills:["창의력","심미안","집중력"], subjects:["미술","정보"], traits:["감각 있는 사람","꼼꼼한 사람"], search:"디자이너 직업 어린이", youtube:"디자이너 되는 법" },
+  { id:16, name:"환경운동가", emoji:"🌱", keyword:"environmentalist nature green",     desc:"지구와 자연을 지키기 위해 활동해요!", skills:["리더십","설득력","지식"], subjects:["과학","사회"], traits:["자연을 사랑하는 사람","행동력 있는 사람"], search:"환경운동가 직업 어린이", youtube:"환경 직업 어린이" },
+];
+
+const COMMENTS = [
+  "오 꽤 진지한 선택인데? 🤔","이 직업도 인기 많음! ✨","생각보다 고민된다ㅋㅋ 😅",
+  "역시 눈이 높군요! 👀","와 이거 진짜 어려운 선택..","찰떡 선택이다! 🎯",
+  "오호~ 취향이 보이는걸? 😎","이 직업 생각보다 대박이야! 🔥","흠 나도 궁금한 선택인데 🧐","센스 있는 선택! 💫",
+];
+
+const ROUND_OPTS = [
+  { label:"8강", count:8 },
+  { label:"16강", count:16 },
+];
+
+const PEXELS_KEY = "5PTBHeIho5LvAdO7iszScz8DEHxt2pgktrGEl6T2lUF0I9A9dOLIUxoS"; // demo key placeholder
+
+// ─── 이미지 훅 ────────────────────────────────
+function useJobImage(keyword) {
+  const [src, setSrc] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let cancelled = false;
+    setLoading(true);
+    setSrc(null);
+    const encoded = encodeURIComponent(keyword);
+    fetch(`https://api.pexels.com/v1/search?query=${encoded}&per_page=3&orientation=square`, {
+      headers: { Authorization: PEXELS_KEY }
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (!cancelled && data.photos && data.photos.length > 0) {
+          const idx = Math.floor(Math.random() * Math.min(data.photos.length, 3));
+          setSrc(data.photos[idx].src.medium);
+        }
+      })
+      .catch(() => {})
+      .finally(() => { if (!cancelled) setLoading(false); });
+    return () => { cancelled = true; };
+  }, [keyword]);
+
+  return { src, loading };
+}
+
+// ─── 직업 카드 컴포넌트 ──────────────────────
+function JobCard({ job, onClick, chosen, unchosen }) {
+  const { src, loading } = useJobImage(job.keyword);
+  const cls = ["job-card", chosen ? "chosen" : "", unchosen ? "unchosen" : ""].join(" ");
+
+  return (
+    <div className={cls} onClick={() => !chosen && !unchosen && onClick(job)}>
+      <div className="card-img-wrap">
+        {loading && <div className="card-skeleton" />}
+        {!loading && src && <img className="card-img" src={src} alt={job.name} loading="lazy" />}
+        {!loading && !src && <div className="card-emoji">{job.emoji}</div>}
+      </div>
+      <div className="card-body">
+        <div className="job-name jua">{job.name}</div>
+        <div className="job-emoji-small">{job.emoji}</div>
+        <div className="pick-hint">👆 탭해서 선택!</div>
+      </div>
+    </div>
+  );
+}
+
+// ─── 배경 장식 ────────────────────────────────
+function BgDeco() {
+  return (
+    <div className="bg-deco">
+      <div className="bg-blob" style={{width:400,height:400,background:"radial-gradient(#ff6b6b,transparent)",top:-100,left:-100}}/>
+      <div className="bg-blob" style={{width:350,height:350,background:"radial-gradient(#c471ed,transparent)",bottom:-80,right:-80}}/>
+      <div className="bg-blob" style={{width:300,height:300,background:"radial-gradient(#12c2e9,transparent)",top:"40%",left:"40%"}}/>
+    </div>
+  );
+}
+
+// ─── 결과 화면 ───────────────────────────────
+function ResultScreen({ winner, nickname, onRetry }) {
+  const { src, loading } = useJobImage(winner.keyword);
+  const canvasRef = useRef(null);
+
+  // 컨페티
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d");
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    const colors = ["#ff6b6b","#c471ed","#12c2e9","#ffd93d","#6bcb77","#ff8e53"];
+    const pieces = Array.from({length:120}, () => ({
+      x: Math.random() * canvas.width,
+      y: Math.random() * -canvas.height,
+      r: Math.random() * 8 + 4,
+      color: colors[Math.floor(Math.random()*colors.length)],
+      speed: Math.random() * 3 + 2,
+      spin: (Math.random() - .5) * .2,
+      angle: 0,
+    }));
+    let raf;
+    const draw = () => {
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pieces.forEach(p => {
+        ctx.save();
+        ctx.translate(p.x, p.y);
+        ctx.rotate(p.angle);
+        ctx.fillStyle = p.color;
+        ctx.fillRect(-p.r/2,-p.r/2,p.r,p.r*.6);
+        ctx.restore();
+        p.y += p.speed;
+        p.angle += p.spin;
+        if (p.y > canvas.height) { p.y = -20; p.x = Math.random()*canvas.width; }
+      });
+      raf = requestAnimationFrame(draw);
+    };
+    draw();
+    const t = setTimeout(() => cancelAnimationFrame(raf), 6000);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+  }, []);
+
+  const searchUrl = `https://www.google.com/search?q=${encodeURIComponent(winner.search)}`;
+  const ytUrl = `https://www.youtube.com/results?search_query=${encodeURIComponent(winner.youtube)}`;
+  const kidsUrl = `https://www.career.go.kr/cnet/front/main/main.do`;
+
+  return (
+    <div className="screen-result">
+      <canvas ref={canvasRef} style={{position:"fixed",inset:0,pointerEvents:"none",zIndex:0}}/>
+      <div className="result-card">
+        <span className="winner-crown jua">🏆</span>
+        <p className="result-title jua"><span className="nick-highlight">{nickname}</span>의 원픽 직업!</p>
+
+        <div className="winner-img-wrap">
+          {loading && <div className="card-skeleton" style={{position:"absolute",inset:0}}/>}
+          {!loading && src && <img className="winner-img" src={src} alt={winner.name}/>}
+          {!loading && !src && <div className="winner-emoji-big">{winner.emoji}</div>}
+        </div>
+
+        <h2 className="winner-name jua">{winner.emoji} {winner.name}</h2>
+        <p className="winner-desc">{winner.desc}</p>
+
+        <div className="info-section">
+          <div className="info-label">💪 필요한 능력</div>
+          <div className="tag-row">{winner.skills.map(s=><span key={s} className="tag tag-skill">{s}</span>)}</div>
+        </div>
+        <div className="info-section">
+          <div className="info-label">📖 관련 교과</div>
+          <div className="tag-row">{winner.subjects.map(s=><span key={s} className="tag tag-subject">{s}</span>)}</div>
+        </div>
+        <div className="info-section">
+          <div className="info-label">🙋 이런 사람에게 잘 맞아요</div>
+          <div className="tag-row">{winner.traits.map(t=><span key={t} className="tag tag-trait">{t}</span>)}</div>
+        </div>
+
+        <div className="link-section">
+          <a className="link-btn" href={searchUrl} target="_blank" rel="noreferrer">
+            <span className="link-icon">🔍</span> 구글에서 더 알아보기
+          </a>
+          <a className="link-btn" href={ytUrl} target="_blank" rel="noreferrer">
+            <span className="link-icon">▶️</span> 유튜브에서 영상 보기
+          </a>
+          <a className="link-btn" href={kidsUrl} target="_blank" rel="noreferrer">
+            <span className="link-icon">🌟</span> 커리어넷에서 탐색하기
+          </a>
+        </div>
+
+        <button className="retry-btn jua" onClick={onRetry}>🔄 다시 하기</button>
+      </div>
+    </div>
+  );
+}
+
+// ─── 게임 화면 ───────────────────────────────
+function GameScreen({ nickname, jobs, onFinish }) {
+  const totalRounds = jobs.length;
+  const [bracket, setBracket] = useState(() => shuffle([...jobs]));
+  const [current, setCurrent] = useState(0);
+  const [winners, setWinners] = useState([]);
+  const [comment, setComment] = useState(COMMENTS[0]);
+  const [chosen, setChosen] = useState(null);
+  const [unchosen, setUnchosen] = useState(null);
+
+  const completed = Math.floor(current / 2);
+  const totalPairs = Math.floor(bracket.length / 2);
+  const roundSize = bracket.length;
+  const roundName = roundSize === 2 ? "결승" : roundSize === 4 ? "4강" : roundSize === 8 ? "8강" : "16강";
+
+  const overallDone = completed + winners.length;
+  const overallTotal = totalRounds - 1;
+  const progress = Math.min((overallDone / overallTotal) * 100, 100);
+
+  const handlePick = useCallback((picked) => {
+    const pairIdx = current;
+    const other = bracket[pairIdx] === picked ? bracket[pairIdx+1] : bracket[pairIdx];
+    setChosen(picked.id);
+    setUnchosen(other.id);
+    setComment(COMMENTS[Math.floor(Math.random() * COMMENTS.length)]);
+
+    setTimeout(() => {
+      setChosen(null);
+      setUnchosen(null);
+      const nextWinners = [...winners, picked];
+      const nextCurrent = current + 2;
+
+      if (nextCurrent >= bracket.length) {
+        if (nextWinners.length === 1) {
+          onFinish(nextWinners[0]);
+          return;
+        }
+        setBracket(shuffle(nextWinners));
+        setWinners([]);
+        setCurrent(0);
+      } else {
+        setWinners(nextWinners);
+        setCurrent(nextCurrent);
+      }
+    }, 500);
+  }, [current, bracket, winners, onFinish]);
+
+  const left = bracket[current];
+  const right = bracket[current+1];
+
+  return (
+    <div className="screen-game">
+      <BgDeco/>
+      <div className="progress-wrap" style={{position:"relative",zIndex:1}}>
+        <div className="progress-info">
+          <span className="round-badge jua">🏆 {roundName}</span>
+          <span style={{fontSize:".82rem",color:"#888"}}>{completed+1} / {totalPairs} 경기</span>
+        </div>
+        <div className="progress-bar-bg">
+          <div className="progress-bar-fill" style={{width:`${progress}%`}}/>
+        </div>
+      </div>
+
+      <div className="vs-area" style={{position:"relative",zIndex:1}}>
+        <p className="jua" style={{fontSize:".95rem",color:"#aaa"}}>👆 더 끌리는 직업을 골라봐!</p>
+        <div className="cards-row">
+          {left && right && <>
+            <JobCard key={left.id+"-"+current} job={left} onClick={handlePick}
+              chosen={chosen===left.id} unchosen={unchosen===left.id}/>
+            <div className="vs-badge jua">VS</div>
+            <JobCard key={right.id+"-"+current} job={right} onClick={handlePick}
+              chosen={chosen===right.id} unchosen={unchosen===right.id}/>
+          </>}
+        </div>
+        <div className="comment-box" key={comment}>{comment}</div>
+        <p style={{fontSize:".78rem",color:"#ccc",marginTop:".5rem"}}>{nickname} 진행중 ✨</p>
+      </div>
+    </div>
+  );
+}
+
+// ─── 닉네임 화면 ──────────────────────────────
+function NicknameScreen({ onStart }) {
+  const [nick, setNick] = useState("");
+  const [roundCount, setRoundCount] = useState(16);
+
+  return (
+    <div className="screen-nick">
+      <BgDeco/>
+      <div className="nick-card">
+        <div className="title-badge jua">✨ 진로 탐색 게임</div>
+        <h1 className="main-title jua">직업<br/>월드컵</h1>
+        <p className="sub-title">내가 좋아하는 직업을 찾아봐! 🔍</p>
+
+        <input
+          className="nick-input jua"
+          placeholder="닉네임을 입력해줘! 😊"
+          value={nick}
+          onChange={e => setNick(e.target.value)}
+          onKeyDown={e => e.key === "Enter" && nick.trim() && onStart(nick.trim(), roundCount)}
+          maxLength={10}
+          autoFocus
+        />
+
+        <div style={{margin:"1rem 0 .5rem",fontSize:".85rem",color:"#aaa"}}>몇 강부터 시작할까?</div>
+        <div className="round-select">
+          {ROUND_OPTS.map(o => (
+            <button key={o.count} className={`round-btn jua ${roundCount===o.count?"active":""}`}
+              onClick={() => setRoundCount(o.count)}>
+              {o.label}
+            </button>
+          ))}
+        </div>
+
+        <button className="start-btn jua" disabled={!nick.trim()}
+          onClick={() => onStart(nick.trim(), roundCount)}>
+          게임 시작! 🚀
+        </button>
+
+        <p style={{marginTop:"1.2rem",fontSize:".78rem",color:"#ccc",lineHeight:1.7}}>
+          정답은 없어요! 내 마음이 가는 곳이 답이에요 💝<br/>
+          선택을 반복하다 보면 나에게 맞는 직업이 나와요!
+        </p>
+      </div>
+    </div>
+  );
+}
+
+// ─── 유틸 ────────────────────────────────────
+function shuffle(arr) {
+  const a = [...arr];
+  for (let i = a.length-1; i > 0; i--) {
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+// ─── 루트 앱 ─────────────────────────────────
+function App() {
+  const [screen, setScreen] = useState("nick"); // nick | game | result
+  const [nickname, setNickname] = useState("");
+  const [gameJobs, setGameJobs] = useState([]);
+  const [winner, setWinner] = useState(null);
+
+  const handleStart = (nick, count) => {
+    setNickname(nick);
+    setGameJobs(shuffle(ALL_JOBS).slice(0, count));
+    setScreen("game");
+  };
+
+  const handleFinish = (job) => {
+    setWinner(job);
+    setScreen("result");
+  };
+
+  const handleRetry = () => {
+    setWinner(null);
+    setScreen("nick");
+  };
+
+  if (screen === "nick") return <NicknameScreen onStart={handleStart}/>;
+  if (screen === "game") return <GameScreen nickname={nickname} jobs={gameJobs} onFinish={handleFinish}/>;
+  if (screen === "result") return <ResultScreen winner={winner} nickname={nickname} onRetry={handleRetry}/>;
+}
+
+ReactDOM.createRoot(document.getElementById("root")).render(<App/>);
+</script>
+</body>
+</html>
