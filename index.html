@@ -540,19 +540,66 @@ const imgCache={};
 function useJobImg(keyword){
   const [src,setSrc]=useState(imgCache[keyword]||null);
   const [loading,setLoading]=useState(!imgCache[keyword]);
+
   useEffect(()=>{
-    if(imgCache[keyword]){setSrc(imgCache[keyword]);setLoading(false);return;}
-    let dead=false;setLoading(true);
-    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword + " people")}&per_page=1`,
-      {headers:{Authorization:PEXELS_KEY}})
-      .then(r=>r.json()).then(d=>{
-        if(!dead&&d.photos&&d.photos.length){
-          const u=d.photos[Math.floor(Math.random()*Math.min(d.photos.length,3))].src.medium;
-          imgCache[keyword]=u;setSrc(u);
+
+    if(imgCache[keyword]){
+      setSrc(imgCache[keyword]);
+      setLoading(false);
+      return;
+    }
+
+    let dead=false;
+    setLoading(true);
+
+    fetch(
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword + " people")}&per_page=1`,
+      {
+        headers:{
+          Authorization:PEXELS_KEY
         }
-      }).catch(()=>{}).finally(()=>{if(!dead)setLoading(false);});
-    return()=>{dead=true;};
+      }
+    )
+    .then(r=>r.json())
+    .then(d=>{
+
+      let u;
+
+      if(d.photos && d.photos.length){
+        u = d.photos[0].src.large;
+      } else {
+
+        // 실패 시 기본 이미지
+        u = "https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg";
+      }
+
+      if(!dead){
+        imgCache[keyword]=u;
+        setSrc(u);
+      }
+
+    })
+    .catch(()=>{
+
+      // fetch 자체 실패 시 fallback
+      const fallback =
+        "https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg";
+
+      if(!dead){
+        setSrc(fallback);
+      }
+
+    })
+    .finally(()=>{
+      if(!dead)setLoading(false);
+    });
+
+    return()=>{
+      dead=true;
+    };
+
   },[keyword]);
+
   return {src,loading};
 }
 
