@@ -560,19 +560,10 @@ function useJobImg(keyword){
         }
       }
     )
-    .then(r=>{
-      console.log("PEXELS STATUS", r.status);
-      return r.json();
-    })
-    .then(d=>{
-
-      let u;
-
-      if(d.photos && d.photos.length){
-        u = d.photos[0].src.large;
-        imgCache[keyword] = u;
-      }
-      if(!dead && u){
+    .then(r=>r.json()).then(d=>{
+      if(!dead&&d.photos&&d.photos.length){
+        const u=d.photos[0].src.medium;
+        imgCache[keyword]=u;
         setSrc(u);
       }
     })
