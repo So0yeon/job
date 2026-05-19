@@ -560,7 +560,10 @@ function useJobImg(keyword){
         }
       }
     )
-    .then(r=>r.json())
+    .then(r=>{
+      console.log("PEXELS STATUS", r.status);
+      return r.json();
+    })
     .then(d=>{
 
       let u;
