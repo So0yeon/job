@@ -543,7 +543,7 @@ function useJobImg(keyword){
   useEffect(()=>{
     if(imgCache[keyword]){setSrc(imgCache[keyword]);setLoading(false);return;}
     let dead=false;setLoading(true);
-    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword + " people")}&per_page=3`,
+    fetch(`https://api.pexels.com/v1/search?query=${encodeURIComponent(keyword + " people")}&per_page=1`,
       {headers:{Authorization:PEXELS_KEY}})
       .then(r=>r.json()).then(d=>{
         if(!dead&&d.photos&&d.photos.length){
