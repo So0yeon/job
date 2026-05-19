@@ -570,22 +570,13 @@ function useJobImg(keyword){
 
       if(d.photos && d.photos.length){
         u = d.photos[0].src.large;
-      } else {
-
-        // 실패 시 기본 이미지
-        u = "https://images.pexels.com/photos/3183197/pexels-photo-3183197.jpeg";
+        imgCache[keyword] = u;
       }
-
-      if(!dead){
-        // 진짜 이미지 검색 성공했을 때만 cache 저장
-        if(d.photos && d.photos.length){
-          imgCache[keyword] = u;
-          }
-
+      if(!dead && u){
         setSrc(u);
       }
-
     })
+      
     .catch(()=>{
 
       // fetch 자체 실패 시 fallback
