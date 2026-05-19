@@ -577,7 +577,11 @@ function useJobImg(keyword){
       }
 
       if(!dead){
-        imgCache[keyword]=u;
+        // 진짜 이미지 검색 성공했을 때만 cache 저장
+        if(d.photos && d.photos.length){
+          imgCache[keyword] = u;
+          }
+
         setSrc(u);
       }
 
